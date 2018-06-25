@@ -1,0 +1,109 @@
+import java_cup.runtime.*;
+import java.util.*;
+import java.io.*;
+
+parser code {:
+
+    private Symbol s;
+
+    public void syntax_error(Symbol s){
+        this.s = s;
+    }
+
+    public void report_error(String message, Object info)  {
+        System.out.println("Warning - " + message);
+    }
+
+    public void report_fatal_error(String message, Object info) throws Exception {
+        throw new Exception();
+    }
+
+    public String linha_coluna(){
+        return this.s.right + " " + this.s.left;
+    }
+
+:}
+
+/* Terminais (tokens retornados pelo scanner). */
+
+terminal        COMENTARIO;
+terminal        VAR, NUMERO, BOOLEANO, TIPO, CARACTERE, TEXTO;
+terminal        SE, SESE, SENAO, ENQUANTO;
+terminal        LEIA, MOSTRE;
+terminal        OPERADOR, COMPARADOR;
+terminal        AP, FP, ACH, FCH, QUEBRA_LINHA, VIRGULA, ATRIBUICAO;
+
+/* Não-Terminais */
+non terminal    programa, corpo, conteudo;
+non terminal    val, exp;
+non terminal    decl, atrib;
+non terminal    leitura, saida, params, mais_params;
+non terminal    se, se_sese, n_sese, se_senao, se_sese_senao, repet;
+
+precedence left OPERADOR, COMPARADOR, AP, FP;
+
+/* A gramática */
+
+/* Define derivação raiz */
+start with programa;
+
+programa            ::= ACH corpo FCH
+                      | ACH FCH;
+
+corpo               ::= corpo conteudo
+                      | conteudo;
+
+conteudo            ::= exp         QUEBRA_LINHA
+                      | atrib       QUEBRA_LINHA
+                      | decl        QUEBRA_LINHA 
+                      | leitura     QUEBRA_LINHA
+                      | saida       QUEBRA_LINHA
+                      | se
+                      | se_sese
+                      | se_senao
+                      | se_sese_senao
+                      | repet
+                      | COMENTARIO
+                      | programa;
+
+val                 ::= NUMERO
+                      | BOOLEANO
+                      | CARACTERE
+                      | VAR;
+
+exp                 ::= exp OPERADOR exp
+                      | exp COMPARADOR exp
+                      | AP exp FP
+                      | val;
+
+decl                ::= TIPO VAR
+                      | TIPO atrib;
+
+atrib               ::= VAR ATRIBUICAO exp;
+
+leitura             ::= LEIA AP params FP;
+
+params              ::= VAR
+                      | VAR mais_params;
+
+mais_params         ::= VIRGULA VAR
+                      | VIRGULA VAR mais_params;
+
+saida               ::= MOSTRE AP TEXTO VIRGULA params FP;
+
+se                  ::= SE AP exp FP programa;
+
+se_sese             ::= se n_sese;
+
+n_sese              ::= SESE AP exp FP programa
+                      | SESE AP exp FP programa n_sese;
+
+se_senao            ::= se SENAO programa;
+
+se_sese_senao       ::= se_sese SENAO programa;
+
+repet               ::= ENQUANTO AP exp FP programa;
+
+
+
+
